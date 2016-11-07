@@ -1,0 +1,31 @@
+```{r, echo=FALSE, message=FALSE,warning=FALSE,results='asis'}
+
+Itotal <- IPAAS %>%
+  select(EMPI, MBR_LAST_NM, MBR_FIRST_NM, MBR_GENDER_CD, MBR_DOB, ZIP_CD) %>%
+  unique() %>%
+  nrow()
+
+data <- sqldf("select B.TYPE, count(distinct A.EMPI) as ODSMatches from IPAAS A join ODS B on A.EMPI = B.EMPI 
+               and A.MBR_LAST_NM = B.MBR_LAST_NM and A.MBR_FIRST_NM = B.MBR_FIRST_NM and A.MBR_GENDER_CD = B.MBR_GENDER_CD and 
+               A.MBR_DOB = B.MBR_DOB and A.ZIP_CD = B.ZIP_CD group by B.TYPE")
+# data <- IPAAS %>%
+#   inner_join(ODS, by = c("EMPI", "MBR_LAST_NM", "MBR_FIRST_NM", "MBR_GENDER_CD", "MBR_DOB", "ZIP_CD")) %>%
+#   group_by(TYPE) %>%
+#   summarise(ODSMatches = n_distinct(EMPI)
+#   ) %>%
+data <- data %>%
+  mutate(iPaaSEMPIs = Itotal) %>%
+  mutate(MatchPcnt = round((ODSMatches/iPaaSEMPIs)*100, digits = 2)) %>%
+  select(TYPE, iPaaSEMPIs, ODSMatches, MatchPcnt)
+
+rm(Itotal)
+
+
+n <- nrow(data)
+```  
+`r if(n==0) {"No data was processed"}`
+`r if(n>0) {datatable(data, rownames = F)}`
+
+
+
+ 

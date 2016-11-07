@@ -1,0 +1,447 @@
+---
+title: "EMPI Check"
+output:
+  html_document:
+    toc: yes
+    runtime: shiny
+---
+
+<!Define CSS> 
+<style>
+body, td {
+   font-family: sans-serif;
+   background-color: white;
+   font-size: 10px;
+   margin: 8px;
+}
+
+tt, code, pre {
+   font-family: 'DejaVu Sans Mono', 'Droid Sans Mono', 'Lucida Console', Consolas, Monaco, monospace;
+}
+
+h1 { 
+   font-size:2.2em; 
+}
+
+h2 { 
+   font-size:1.8em; 
+}
+
+h3 { 
+   font-size:1.4em; 
+}
+
+h4 { 
+   font-size:1.0em; 
+}
+
+h5 { 
+   font-size:0.9em; 
+}
+
+h6 { 
+   font-size:0.8em; 
+}
+
+a:visited {
+   color: rgb(50%, 0%, 50%);
+}
+
+pre {  
+   margin-top: 0;
+   max-width: 95%;
+   border: 1px solid #ccc;
+   white-space: pre-wrap;
+}
+
+pre code {
+   display: block; padding: 0.5em;
+}
+
+code.r, code.cpp {
+   background-color: #F8F8F8;
+}
+
+/*
+  Web20 Table Style
+  written by Netway Media, http://www.netway-media.com
+*/
+table {
+  border-collapse: collapse;
+  border: 1px solid #666666;
+  font: normal 11px verdana, arial, helvetica, sans-serif;
+  color: #363636;
+  background: #f6f6f6;
+  text-align: right;
+  width: auto;
+  align: left;
+  margin: auto;
+  }
+  
+caption {
+  text-align: center;
+  font: bold 10px arial, helvetica, sans-serif;
+  background: transparent;
+  padding:6px 4px 8px 0px;
+  color: #000000;
+  text-transform: uppercase;
+}
+
+thead, tfoot {
+background:url(bg1.png) repeat-x;
+text-align:left;
+height:30px;
+}
+
+thead th, tfoot th {
+padding:5px;
+}
+
+table a {
+color: #333333;
+text-decoration:none;
+}
+
+table a:hover {
+text-decoration:underline;
+}
+
+tr.odd {
+background: #f1f1f1;
+}
+
+tbody th, tbody td {
+padding:5px;
+}
+
+blockquote {
+   color:#666666;
+   margin:0;
+   padding-left: 1em;
+   border-left: 0.5em #EEE solid;
+}
+
+hr {
+   height: 0px;
+   border-bottom: none;
+   border-top-width: thin;
+   border-top-style: dotted;
+   border-top-color: #999999;
+}
+
+@media print {
+   * { 
+      background: transparent !important; 
+      color: black !important; 
+      filter:none !important; 
+      -ms-filter: none !important; 
+   }
+
+   body { 
+      font-size:10pt; 
+      max-width:100%; 
+   }
+       
+   a, a:visited { 
+      text-decoration: underline; 
+   }
+
+   hr { 
+      visibility: hidden;
+      page-break-before: always;
+   }
+
+   pre, blockquote { 
+      padding-right: 1em; 
+      page-break-inside: avoid; 
+   }
+
+   tr, img { 
+      page-break-inside: avoid; 
+   }
+
+   img { 
+      max-width: 100% !important; 
+   }
+
+   @page :left { 
+      margin: 15mm 20mm 15mm 10mm; 
+   }
+     
+   @page :right { 
+      margin: 15mm 10mm 15mm 20mm; 
+   }
+
+   p, h2, h3 { 
+      orphans: 3; widows: 3;
+   }
+
+   h2, h3 { 
+      page-break-after: avoid;
+   }
+}
+h1 {color:black; font-family:"Georgia"}
+h2 {color:#dd6628}
+h3 {color:#3a98cd}
+p {color:black; text-align:justify;}
+
+//
+// Modal
+// ----------------------
+
+.modal{
+  
+   
+  // This is modal bg
+  &:before{
+    content: ""; 
+    display: none;
+    background: rgba(0,0,0,.6);
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0; 
+    z-index: 10;
+  }
+  
+  &:target{
+     
+    // Active animate in modal
+    &:before{
+      display: block;
+    }  
+    .modal-dialog{
+      .translate(0, 0); 
+      top: 20%;  
+    }
+     
+  }
+  
+}
+
+// Modal Dialog
+// ----------------------
+
+.modal-dialog{
+  background: #fefefe;
+  border: @gray solid 1px;
+  border-radius: 5px;
+  margin-left: -200px;
+  position: fixed; 
+  left: 50%; 
+  top: -100%;  
+  z-index: 11; 
+  width: 360px;
+  .translate(0, -500%);
+  .transition-transform(~"0.3s ease-out");
+}
+
+.modal-body{
+  padding: @space/2;
+}
+
+.modal-header,
+.modal-footer{
+  padding: @space/4 @space/2;
+}
+
+.modal-header{
+  border-bottom: @gray-lighter solid 1px;
+  
+  h2{
+    font-size: 20px;
+  }
+  
+}
+
+.modal-footer{
+  border-top: @gray-lighter solid 1px;
+  text-align: right;
+}
+
+
+#close {
+  display: none; 
+}
+
+</style>
+
+
+<!Define CSS> 
+```{r include=FALSE, cache=FALSE}
+# if (!requireNamespace('htmlwidgets') || packageVersion('htmlwidgets') <= '0.3.2')
+#   devtools::install_github('ramnathv/htmlwidgets')
+# # install DT
+# if (!require("DT")) devtools::install_github("rstudio/DT")
+# # if (!require("purrr")) devtools::install_github("hadley/purrr")
+# 
+# #library(XLConnect)
+# library(RODBC)
+# library(data.table)
+# library(sqldf)
+# library(tidyr)
+# library (plyr)
+# library(dplyr)
+# library(knitr)
+# library(pander)
+# library(purrr)
+# library(ggplot2)
+# library(chron)
+# library(date)
+# library(zoo)
+# library(lubridate)
+# library(reshape)
+# library(shiny)
+# library(shinyBS)
+# library(DT)
+
+##get common functions
+# wd <-getwd()
+# setwd('..')
+# source('./SharedDataScripts/CommonFunctions.R')
+# setwd(wd)
+# remove(wd)
+```
+
+```{r include=FALSE, cache=FALSE}
+
+##iPaaS
+# IEnv <-"Stage"
+# IDNS <- "IPAAS"
+# IClient <- "CHS"
+# IClientDB <-IDNS
+# Entity <- 55
+# 
+# 
+# ##ODS
+# OEnv <-"UAT 01"
+# ODNS <- "ODS"
+# OClient <- "CHS"
+# OClienntODS <-paste(OClient, ODNS, sep="")
+# OClientDB <-paste(OClient, ODNS, sep="")
+# Client <- 9
+
+OClient <- CLIENTS %>%
+  filter(Abbrev == input$clientInput) %>%
+  select(Abbrev) %>%
+  unique()
+
+OClientDB <-paste(OClient, "ODS", sep="")
+
+ClientID <- CLIENTS %>%
+  filter(Abbrev == input$clientInput) %>%
+  select(ClientID) %>%
+  unique()
+
+ODSAddress <- SERVERS %>%
+  filter(Type == "ODS") %>%
+  filter(Name == input$odsenvInput) %>%
+  select(Path) %>%
+  unique()
+
+IPAASAddress <<- SERVERS %>%
+  filter(Type == "IPAAS") %>%
+  filter(Name == input$ipaasenvInput) %>%
+  select(Path) %>%
+  unique()
+
+EntityID <- ENTITIES() %>%
+  filter(ENTITY_NM == input$entityInput) %>%
+  select(ENTITY_ID) %>%
+  unique()
+
+IEntity <- ENTITIES() %>%
+  filter(ENTITY_NM == input$entityInput) %>%
+  select(ENTITY_NM) %>%
+  unique()
+
+ODSEnv <- SERVERS %>%
+  filter(Type == "ODS") %>%
+  filter(Name == input$odsenvInput) %>%
+  select(Name) %>%
+  unique()
+
+IPAASEnv <<- SERVERS %>%
+  filter(Type == "IPAAS") %>%
+  filter(Name == input$ipaasenvInput) %>%
+  select(Name) %>%
+  unique()
+
+
+#get data
+# setwd('./DataLoadScripts/')
+source('GetEMPIData.R', local=TRUE)
+# setwd('.')
+# odbcCloseAll()
+```
+# Parameters
+<ul class="list-group">
+  <li class="list-group-item">ODS Client Evaluated:  `r OClient`</li>
+  <li class="list-group-item">iPaaS Entity Evaluated: `r IEntity`</li>
+  <li class="list-group-item">ODS Environment: `r ODSEnv`</li>
+  <li class="list-group-item">iPaaS Environment: `r IPAASEnv`</li>
+  <li class="list-group-item">ODS Server: `r ODSAddress`</li>
+  <li class="list-group-item">iPaaS Server: `r IPAASAddress`</li>
+</ul>
+
+
+
+#iPaaS to ODS EMPI & MBR_ID Matches
+<div class="panel panel-primary">
+  <div class="panel-heading">Summary of records matching on EMPI and MBR_ID</div>
+  <div class="panel-body">* For CONTROL_ID = 2, member match is made on client provided MBR_ID. 
+  * A low match percentage indicates that EMPIs are out of sync between iPaaS and ODS.
+  
+```{r child = './tblEMPI_MBR_IDMatchSummary_1.Rmd'}
+```
+
+
+  </div>
+</div>
+
+
+#iPaaS to ODS EMPI & SYS_MBR_SK Matches
+<div class="panel panel-primary">
+  <div class="panel-heading">Summary of records matching on EMPI and SYS_MBR_SK </div>
+  <div class="panel-body">* General check of EMPIs and SKs between iPaaS and ODS.
+  * A low match percentage indicates that EMPIs are out of sync between iPaaS and ODS.
+  
+```{r child = './tblEMPI_SKMatchSummary_1.Rmd'}
+```
+
+
+  </div>
+</div>
+
+
+#iPaaS to ODS EMPI & Demographic Matches
+<div class="panel panel-primary">
+  <div class="panel-heading">Summary of records matching on EMPI and Demographic fields </div>
+  <div class="panel-body">* For CONTROL_ID = 0, member match is made based on EMR demographic information.
+  * A low match percentage indicates that the EMPIs are out of sync between iPaaS and ODS.
+  
+```{r child = './tblEMPI_DemographicsMatchSummary_1.Rmd'}
+```
+
+
+  </div>
+</div>
+
+
+#iPaaS to ODS SYS_MBR_SK & Demographic Matches
+<div class="panel panel-primary">
+  <div class="panel-heading">Summary of records matching on SYS_MBR_SK and Demographic fields </div>
+  <div class="panel-body">* General check of SKs between iPaaS and ODS.
+  * A low match percentage indicates that SKs are out of sync between iPaaS and ODS.
+  
+```{r child = './tblSK_DemographicsMatchSummary_1.Rmd'}
+```
+
+
+  </div>
+</div>
+
+
+
+
+
+
+
